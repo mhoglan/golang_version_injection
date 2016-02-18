@@ -1,5 +1,80 @@
 Pared down example of how to do version injection and methods for golang.  Eventually will be looking at making available the whole `Makefile` and process which performs additional things useful for bootstrapping golang projects.
 
+## Quick steps
+
+Repository needs to have a tag on it.
+
+Using this repository as an example.
+
+```
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# git clone https://github.com/mhoglan/golang_version_injection.git .
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# ls
+LICENSE  Makefile  README.md  generate_version_info.sh	main.go  scripts  textfile_constants.go
+```
+
+`generate_version_info.sh` script can output `keyvalue` pairs of the workspace, useful for sourcing in the `Makefile`
+
+```
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# ./generate_version_info.sh keyvalue
+BRANCH=master
+BUILD_DATE=20160218.164903
+BUILD_LABEL=projectname-v0.0.1-0-ga
+COMMITS=0
+DIRTY=false
+GIT_DESCRIBE=v0.0.1-0-g0034474
+GIT_SHA1=g0034474
+LABEL=ga
+VERSION=v0.0.1
+VERSION_INFO_JSON='{ "version_info": { "branch": "master", "build_date": "20160218.164903", "build_label": "projectname-v0.0.1-0-ga", "commits": "0", "dirty": "false", "git_describe": "v0.0.1-0-g0034474", "git_sha1": "g0034474", "label": "ga", "version": "v0.0.1" } }'
+```
+
+Or output `json` which is useful for human readable or machine parseable
+
+```
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# ./generate_version_info.sh json
+{
+    "version_info": {
+        "branch": "master",
+        "build_date": "20160218.164907",
+        "build_label": "projectname-v0.0.1-0-ga",
+        "commits": "0",
+        "dirty": "false",
+        "git_describe": "v0.0.1-0-g0034474",
+        "git_sha1": "g0034474",
+        "label": "ga",
+        "version": "v0.0.1"
+    }
+}
+```
+
+The `Makefile` wraps the `go generate` and `go install` commands
+
+Example of injecting a value via the `-ldflags` is also shown
+
+```
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# make go-install
+go generate github.com/mhoglan/golang_version_injection/...
+go install -a -tags netgo -installsuffix nocgo -ldflags "-X main.BUILD_LABEL=projectname-v0.0.1-0-ga" github.com/mhoglan/golang_version_injection/...
+```
+
+Check the resultant binary and can see the `json` version information has been injected
+
+```
+root@3e32bcca8e8e:/go/src/github.com/mhoglan/golang_version_injection# /go/bin/golang_version_injection version
+{
+  "version_info": {
+    "branch": "master",
+    "build_date": "20160218.164912",
+    "build_label": "projectname-v0.0.1-0-ga",
+    "commits": "0",
+    "dirty": "false",
+    "git_describe": "v0.0.1-0-g0034474",
+    "git_sha1": "g0034474",
+    "label": "ga",
+    "version": "v0.0.1"
+  }
+}
+```
 
 ## Version Information
 Information regarding the environment and version of the project can be injected into the golang binary.  The binary can then display this information upon being asked.  This is preferable over relying on secondary files packaged with the build, timestamps or md5sums of the binary  
